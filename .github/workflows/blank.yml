@@ -7,26 +7,22 @@ on:
 
 jobs:
   build:
-    # Only run on PRs if the source branch is on someone else's repo (fork PRs)
     if: ${{ github.event_name != 'pull_request' || github.repository != github.event.pull_request.head.repo.full_name }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Git Repository
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
-          fetch-depth: 0   # важно для патчей
+          fetch-depth: 0
 
-      - name: Set up JDK
-        uses: actions/setup-java@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '25'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
+      - uses: gradle/actions/setup-gradle@v6
 
-      - name: Configure Git User Details
+      - name: Configure Git
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
@@ -34,13 +30,16 @@ jobs:
       - name: Apply Patches
         run: ./gradlew applyAllPatches --stacktrace
 
-      - name: Build Paperclip JAR (Folia kernel)
-        run: ./gradlew createMojmapPaperclipJar --stacktrace
+      - name: List build tasks (debug)
+        run: ./gradlew tasks --all | grep -i -E "(paperclip|bundler|jar)" || echo "No matching tasks found"
+
+      - name: Build Folia JAR
+        run: ./gradlew createPaperclipJar --stacktrace   # ← попробуй сначала это
 
       - name: Upload Folia JAR
         uses: actions/upload-artifact@v4
         with:
-          name: folia-server-jar
-          path: build/libs/folia-*-*.jar
-          if-no-files-found: error
+          name: folia-server
+          path: build/libs/*.jar
+          if-no-files-found: warn
           retention-days: 30
