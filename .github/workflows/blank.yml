@@ -30,16 +30,16 @@ jobs:
       - name: Apply Patches
         run: ./gradlew applyAllPatches --stacktrace
 
-      - name: List build tasks (debug)
-        run: ./gradlew tasks --all | grep -i -E "(paperclip|bundler|jar)" || echo "No matching tasks found"
-
       - name: Build Folia JAR
-        run: ./gradlew createPaperclipJar --stacktrace   # ← попробуй сначала это
+        run: ./gradlew createPaperclipJar --stacktrace
 
       - name: Upload Folia JAR
         uses: actions/upload-artifact@v4
         with:
           name: folia-server
-          path: build/libs/*.jar
+          path: |
+            **/build/libs/*.jar
+            !**/build/libs/*-dev.jar
+            !**/build/libs/*-sources.jar
           if-no-files-found: warn
           retention-days: 30
